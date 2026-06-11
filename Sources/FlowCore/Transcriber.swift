@@ -1,9 +1,11 @@
 import Speech
 import AVFoundation
+import os
 
 /// On-device speech-to-text via macOS 26's SpeechAnalyzer/SpeechTranscriber.
 /// One instance per app; a fresh analyzer session is created per dictation.
 public final class Transcriber {
+    private static let log = Logger(subsystem: "com.hadi.flow", category: "transcriber")
     private var analyzer: SpeechAnalyzer?
     private var transcriber: SpeechTranscriber?
     private var inputBuilder: AsyncStream<AnalyzerInput>.Continuation?
@@ -36,6 +38,7 @@ public final class Transcriber {
         let a = SpeechAnalyzer(modules: [t])
         analyzer = a
         analyzerFormat = await SpeechAnalyzer.bestAvailableAudioFormat(compatibleWith: [t])
+        Self.log.info("session start, analyzerFormat \(self.analyzerFormat != nil ? "ok" : "NIL — no audio will be fed")")
         converter = nil
         let (sequence, builder) = AsyncStream<AnalyzerInput>.makeStream()
         inputBuilder = builder
@@ -44,6 +47,7 @@ public final class Transcriber {
                 for try await result in t.results {
                     guard let self else { return }
                     let text = String(result.text.characters)
+                    Self.log.debug("result isFinal=\(result.isFinal) len=\(text.count)")
                     if result.isFinal {
                         self.finalized += text
                         self.onFinalSegment?(text)
@@ -91,6 +95,7 @@ public final class Transcriber {
         try? await analyzer?.finalizeAndFinishThroughEndOfInput()
         _ = await resultsTask?.value
         let result = finalized
+        Self.log.info("session stop, finalized \(result.count) chars")
         teardown()
         return result
     }

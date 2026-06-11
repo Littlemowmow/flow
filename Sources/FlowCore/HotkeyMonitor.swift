@@ -2,6 +2,7 @@ import AppKit
 
 /// Global hotkey watcher via CGEventTap.
 /// - Hold fn (keycode 63): onFnDown / onFnUp.
+/// - Hold right-Option (keycode 61): onRewriteDown / onRewriteUp.
 /// - fn+space: onHandsFreeToggle (the space event is swallowed).
 /// - Esc while hands-free: onEscape (swallowed).
 /// Requires Accessibility + Input Monitoring permissions.
@@ -9,12 +10,15 @@ public final class HotkeyMonitor {
     public var onFnDown: (() -> Void)?
     /// Bool = whether fn+space fired during this hold (release should be ignored).
     public var onFnUp: ((Bool) -> Void)?
+    public var onRewriteDown: (() -> Void)?
+    public var onRewriteUp: (() -> Void)?
     public var onHandsFreeToggle: (() -> Void)?
     public var onEscape: (() -> Void)?
     public var isHandsFreeActive: () -> Bool = { false }
 
     private var tap: CFMachPort?
     private var fnHeld = false
+    private var rightOptionHeld = false
     private var spaceFiredDuringHold = false
 
     public init() {}
@@ -46,6 +50,17 @@ public final class HotkeyMonitor {
             if let tap { CGEvent.tapEnable(tap: tap, enable: true) }
         case .flagsChanged:
             let keycode = event.getIntegerValueField(.keyboardEventKeycode)
+            if keycode == 61 {
+                let optNow = event.flags.contains(.maskAlternate)
+                if optNow && !rightOptionHeld {
+                    rightOptionHeld = true
+                    DispatchQueue.main.async { self.onRewriteDown?() }
+                } else if !optNow && rightOptionHeld {
+                    rightOptionHeld = false
+                    DispatchQueue.main.async { self.onRewriteUp?() }
+                }
+                break
+            }
             guard keycode == 63 else { break }
             let fnNow = event.flags.contains(.maskSecondaryFn)
             if fnNow && !fnHeld {
