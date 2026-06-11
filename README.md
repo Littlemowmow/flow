@@ -17,15 +17,25 @@ Personal Wispr Flow replacement. 100% free, 100% on-device, zero subscriptions.
 
 Nothing ever leaves the Mac.
 
-## Build & install
+## Install
+
+One-liner (requires Xcode 26+):
 
 ```sh
+curl -fsSL https://raw.githubusercontent.com/Littlemowmow/flow/main/Scripts/install.sh | zsh
+```
+
+Or manually:
+
+```sh
+git clone https://github.com/Littlemowmow/flow.git && cd flow
 Scripts/bundle.sh
 cp -R build/Flow.app /Applications/
 open /Applications/Flow.app
 ```
 
-Requires macOS 26 on Apple Silicon with Apple Intelligence enabled.
+Requires macOS 26 on Apple Silicon. Apple Intelligence enabled gets you the
+on-device AI cleanup; without it Flow falls back to regex cleanup.
 
 ## One-time setup
 
