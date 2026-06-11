@@ -19,7 +19,9 @@ Nothing ever leaves the Mac.
 
 ## Install
 
-One-liner (requires Xcode 26+):
+Not technical? Follow the [step-by-step guide](INSTALL.md).
+
+One-liner (requires Xcode 26+ or Command Line Tools):
 
 ```sh
 curl -fsSL https://raw.githubusercontent.com/Littlemowmow/flow/main/Scripts/install.sh | zsh
